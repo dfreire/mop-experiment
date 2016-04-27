@@ -1,0 +1,23 @@
+{
+    "columns": [{
+        "name": "id",
+        "type": "string",
+        "primaryKey": true
+    }, {
+        "name": "email",
+        "type": "string",
+        "notNull": true
+    }, {
+        "name": "roleId",
+        "type": "CustomerRoleEnum.id",
+        "notNull": true
+    }, {
+        "name": "roleId",
+        "type": "SignupOriginEnum.id",
+        "notNull": true
+    }, {
+        "name": "createdAt",
+        "type": "date",
+        "notNull": true
+    }]
+}

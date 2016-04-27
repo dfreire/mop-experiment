@@ -1,0 +1,12 @@
+{
+    "columns": [{
+        "name": "id",
+        "type": "string",
+        "primaryKey": true
+    }],
+    "rows": [{
+        "id": "sommelier"
+    }, {
+        "id": "restaurant"
+    }]
+}
