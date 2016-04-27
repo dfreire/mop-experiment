@@ -12,7 +12,7 @@
         "type": "CustomerRoleEnum.id",
         "notNull": true
     }, {
-        "name": "roleId",
+        "name": "signupOriginId",
         "type": "SignupOriginEnum.id",
         "notNull": true
     }, {

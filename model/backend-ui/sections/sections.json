@@ -1,0 +1,10 @@
+[{
+    "title": "Administration"
+}, {
+    "title": "Winot",
+    "expanded": true,
+    "records": [{
+        "id": "customers",
+        "title": "Customers"
+    }]
+}]

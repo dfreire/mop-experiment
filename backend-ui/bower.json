@@ -1,0 +1,7 @@
+{
+    "name": "sc-reloaded",
+    "dependencies": {
+        "jquery": "1.12.3",
+        "lodash": "*"
+    }
+}
