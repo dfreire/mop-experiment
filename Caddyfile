@@ -1,0 +1,7 @@
+localhost:9500 {
+    root ./backend-ui/
+
+    proxy /v1 localhost:3500 {
+        without /v1
+    }
+}

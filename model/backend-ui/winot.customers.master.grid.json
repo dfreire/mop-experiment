@@ -2,21 +2,22 @@
     "winot.customers.master.grid": {
         "type": "ListGrid",
         "fields": [{
+            "name": "id",
+            "primaryKey": true,
+            "hidden": true
+        }, {
             "name": "email",
-            "title": "Email",
-            "table": "Customer"
+            "title": "Email"
         }, {
             "name": "roleId",
-            "title": "Role",
-            "table": "Customer"
+            "title": "Role"
         }, {
             "name": "signupOriginId",
-            "title": "Signup Origin",
-            "table": "Customer"
+            "title": "Signup Origin"
         }, {
             "name": "createdAt",
-            "title": "Created At",
-            "table": "Customer"
-        }]
+            "title": "Created At"
+        }],
+        "endpoint": "/v1/get-customers"
     }
 }
