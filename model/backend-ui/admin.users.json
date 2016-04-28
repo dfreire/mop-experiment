@@ -1,7 +1,7 @@
 {
-    "winot.translations": {
+    "admin.users": {
         "type": "VLayout",
-        "title": "Translations",
+        "title": "Users",
         "items": [{
             "id": "master"
         }, {

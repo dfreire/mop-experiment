@@ -21,17 +21,19 @@
 				return item.callbackRef;
 			},
 			off: function(eventId, callbackRef) {
-				callbacks = _.filter(callbacks, function(item) { item.callbackRef !== callbackRef });
+				callbacks = _.filter(callbacks, function(item) {
+					item.callbackRef !== callbackRef
+				});
 			},
 			once: function(eventId, callback) {
-				var callbackRef = Bus.on(eventId, _.wrap(callback, function (eventData) {
+				var callbackRef = Bus.on(eventId, _.wrap(callback, function(eventData) {
 					Bus.off(eventId, callbackRef);
 					Bus.callback(eventData);
 				}));
 			},
 			fire: function(eventId, eventData) {
 				console.log("fire", eventId, JSON.stringify(eventData));
-				_.each(callbacks, function (item) {
+				_.each(callbacks, function(item) {
 					if (item.eventId === eventId) {
 						item.callbackFn(eventData);
 					}
@@ -48,19 +50,6 @@
 			}
 		};
 	})();
-
-	$.getJSON("/generated/model.json", function(model) {
-		console.log("model", model);
-		render(model);
-	});
-
-	function render(model) {
-		isc.VLayout.create({
-			width: "100%",
-			height: "100%",
-			members: [createMainMenu(model), createMainSplitPane(model)]
-		});
-	}
 
 	function createMainMenu(model) {
 		return isc.ToolStrip.create({
@@ -106,9 +95,9 @@
 					parentIdField: 'parentId',
 					data: treeData
 				}),
-				selectionUpdated: function(record, recordList) {
-					if (_.size(recordList) > 0) {
-						var tabId = [section.id, recordList[0].id].join(".");
+				rowClick: function(record) {
+					if (_.isObject(record)) {
+						var tabId = [section.id, record.id].join(".");
 						Bus.fire(EVENTS.OPEN_MAIN_TAB, tabId);
 					}
 				}
@@ -169,7 +158,8 @@
 				tabset.addTab({
 					ID: iscID,
 					title: tab.title,
-					canClose: true
+					canClose: true,
+					pane: createComponent(model, tabId)
 				});
 				tabset.selectTab(iscID);
 			}
@@ -186,5 +176,75 @@
 		return _.rest(id.split("__")).join(".");
 	}
 
+	function createComponent(model, id) {
+		console.log("createComponent", id);
+		switch (model[id].type) {
+			case "VLayout":
+				return createVLayout(model, id);
+			case "ListGrid":
+				return createListGrid(model, id);
+		}
+	}
+
+	function createVLayout(model, id) {
+		var layoutModel = model[id];
+		return isc.VLayout.create({
+			// ID: modelIdToIscId(id),
+			width: "100%",
+			height: "100%",
+			showEmptyMessage: false,
+			showFilterEditor: true,
+			members: _.map(layoutModel.items, function(item) {
+				var childId = id + "." + item.id;
+				return createComponent(model, childId);
+			})
+		});
+	}
+
+	function createListGrid(model, id) {
+		var gridModel = model[id];
+
+		var datasource = isc.DataSource.create({
+			clientOnly: true,
+			fields: gridModel.fields
+		});
+
+		var grid = isc.ListGrid.create({
+			// ID: modelIdToIscId(id),
+			width: "100%",
+			height: "100%",
+			alternateRecordStyles: true,
+			showFilterEditor: true,
+			filterOnKeypress: true,
+			dataProperties: {
+				useClientSorting: true,
+				useClientFiltering: true
+			},
+			showAllRecords: true,
+			autoFetchData: true,
+			dataSource: datasource
+		});
+
+		$.getJSON("http://176.58.98.20/v1/get-customers", function(response) {
+			console.log("response", response);
+
+			datasource.setCacheData(response.data);
+		});
+
+		return grid;
+	}
+
+	function render(model) {
+		isc.VLayout.create({
+			width: "100%",
+			height: "100%",
+			members: [createMainMenu(model), createMainSplitPane(model)]
+		});
+	}
+
+	$.getJSON("/generated/model.json", function(model) {
+		console.log("model", model);
+		render(model);
+	});
 
 })();

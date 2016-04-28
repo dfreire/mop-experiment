@@ -1,7 +1,7 @@
 {
     "sections": {
         "items": [{
-            "id": "administration",
+            "id": "admin",
             "title": "Administration",
             "items": [{
                 "id": "users",
@@ -12,12 +12,6 @@
             "title": "Winot",
             "expanded": true,
             "items": [{
-                "id": "news",
-                "title": "News"
-            }, {
-                "id": "translations",
-                "title": "Translations"
-            }, {
                 "id": "customers",
                 "title": "Customers"
             }]
