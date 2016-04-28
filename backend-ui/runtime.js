@@ -4,11 +4,13 @@
 		CLICKED_MAIN_SECTION_ITEM: "CLICKED_MAIN_SECTION_ITEM",
 		SELECTED_MAIN_TAB: "SELECTED_MAIN_TAB",
 		FETCHED_GRID_DATA: "FETCHED_GRID_DATA",
+		SELECTED_GRID_RECORDS: "SELECTED_GRID_RECORDS",
 	};
 
 	var ACTIONS = {
 		FETCH_GRID_DATA: "FETCH_GRID_DATA",
 		CLICKED_RELOAD_BUTTON: "CLICKED_RELOAD_BUTTON",
+		CLICKED_REMOVE_BUTTON: "CLICKED_REMOVE_BUTTON",
 	};
 
 	function createMainMenu(model) {
@@ -179,13 +181,15 @@
 				var gridData = eventData.gridData;
 				datasource.setCacheData(gridData);
 				datasource.updateCaches({ operationType: "update", data: gridData });
+				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
 			}
 		});
 
 		var grid = isc.ListGrid.create({
-			// ID: modelIdToIscId(id),
+			ID: modelIdToIscId(id),
 			width: "100%",
 			height: "100%",
+			setAutoFitData: "both",
 			alternateRecordStyles: true,
 			canAutoFitFields: false,
 			showFilterEditor: true,
@@ -196,11 +200,19 @@
 				useClientFiltering: true
 			},
 			showAllRecords: true,
+			// selectionProperty: '_selected',
 			autoFetchData: true,
 			dataSource: datasource,
+			selectionUpdated: function (record, recordList) {
+				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
+			},
+			filterData: function() {
+				this.Super("filterData", arguments);
+				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
+			},
 			destroy: function() {
+				this.Super("destroy", arguments);
 				Bus.off(listenerRef);
-				return this.Super("destroy", arguments);
 			}
 		});
 
@@ -211,13 +223,41 @@
 
 	function createIButton(model, id) {
 		var buttonModel = model[id];
+
+		var listenerRef;
+		if (buttonModel.boundToGridId) {
+			listenerRef = Bus.on(EVENTS.SELECTED_GRID_RECORDS, function(gridId) {
+				if (gridId === buttonModel.boundToGridId) {
+					var records = getGridVisibleSelectedRecords(gridId);
+					getNative(id).setEnabled((buttonModel.minSelectedCount || 0) <= records.length);
+					if (buttonModel.displaySelectedCount) {
+						getNative(id).setTitle(buttonModel.title + " (" + records.length + ")")
+					}
+				}
+			});
+		}
+
 		return isc.IButton.create({
+			ID: modelIdToIscId(id),
 			title: buttonModel.title,
 			width: 150,
+			enabled: (buttonModel.minSelectedCount || 0) === 0,
 			click: function() {
 				Bus.execute(buttonModel.action, buttonModel);
+			},
+			destroy: function() {
+				Bus.off(listenerRef);
+				return this.Super("destroy", arguments);
 			}
 		});
+	}
+
+	function getNative(id) {
+		return window[modelIdToIscId(id)];
+	}
+
+	function getGridVisibleSelectedRecords(gridId) {
+		return getNative(gridId).getSelectedRecords();
 	}
 
 	function render(model) {
@@ -247,6 +287,10 @@
 		Bus.handle(ACTIONS.CLICKED_RELOAD_BUTTON, function(buttonModel) {
 			var gridModel = model[buttonModel.boundToGridId];
 			Bus.execute(ACTIONS.FETCH_GRID_DATA, gridModel);
+		});
+
+		Bus.handle(ACTIONS.CLICKED_REMOVE_BUTTON, function(buttonModel) {
+			var gridModel = model[buttonModel.boundToGridId];
 		});
 	}
 })();

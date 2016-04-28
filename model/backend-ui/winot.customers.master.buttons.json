@@ -2,6 +2,14 @@
     "winot.customers.master.buttons": {
         "type": "HLayout",
         "items": [{
+            "id": "remove",
+            "type": "IButton",
+            "title": "Remove",
+            "action": "CLICKED_REMOVE_BUTTON",
+            "boundToGridId": "winot.customers.master.grid",
+            "minSelectedCount": 1,
+            "displaySelectedCount": true
+        }, {
             "id": "reload",
             "type": "IButton",
             "title": "Reload",
