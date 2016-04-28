@@ -3,10 +3,12 @@
 	var EVENTS = {
 		CLICKED_MAIN_SECTION_ITEM: "CLICKED_MAIN_SECTION_ITEM",
 		SELECTED_MAIN_TAB: "SELECTED_MAIN_TAB",
+		FETCHED_GRID_DATA: "FETCHED_GRID_DATA",
 	};
 
 	var ACTIONS = {
 		FETCH_GRID_DATA: "FETCH_GRID_DATA",
+		CLICKED_RELOAD_BUTTON: "CLICKED_RELOAD_BUTTON",
 	};
 
 	function createMainMenu(model) {
@@ -135,25 +137,29 @@
 	}
 
 	function createComponent(model, id) {
-		console.log("createComponent", id);
 		switch (model[id].type) {
+			case "HLayout":
+				return createLayout("HLayout", model, id);
 			case "VLayout":
-				return createVLayout(model, id);
+				return createLayout("VLayout", model, id);
 			case "ListGrid":
 				return createListGrid(model, id);
+			case "IButton":
+				return createIButton(model, id);
 		}
 	}
 
-	function createVLayout(model, id) {
+	function createLayout(layoutType, model, id) {
 		var layoutModel = model[id];
-		return isc.VLayout.create({
+		return isc[layoutType].create({
 			// ID: modelIdToIscId(id),
 			width: "100%",
 			height: "100%",
-			showEmptyMessage: false,
-			showFilterEditor: true,
 			members: _.map(layoutModel.items, function(item) {
 				var childId = id + "." + item.id;
+				if (_.isString(item.type)) {
+					model[childId] = item;
+				}
 				return createComponent(model, childId);
 			})
 		});
@@ -167,6 +173,20 @@
 			fields: gridModel.fields
 		});
 
+		Bus.on(EVENTS.FETCHED_GRID_DATA, function(eventData) {
+			var gridId = eventData.gridId;
+			if (gridId === gridModel.id) {
+				var gridData = eventData.gridData;
+				console.log("set data", gridData);
+				// datasource.invalidateCache();
+				datasource.setCacheData(gridData);
+				datasource.updateCaches({
+					operationType: "update",
+					data: gridData
+				});
+			}
+		});
+
 		var grid = isc.ListGrid.create({
 			// ID: modelIdToIscId(id),
 			width: "100%",
@@ -175,7 +195,7 @@
 			canAutoFitFields: false,
 			showFilterEditor: true,
 			filterOnKeypress: true,
-		    canMultiSort: true,
+			canMultiSort: true,
 			dataProperties: {
 				useClientSorting: true,
 				useClientFiltering: true
@@ -185,15 +205,20 @@
 			dataSource: datasource
 		});
 
-		function fetchGridData() {
-			Bus.execute(ACTIONS.FETCH_GRID_DATA, { gridId: id, gridModel: gridModel }, function(data) {
-				datasource.setCacheData(data);
-			});
-		}
-
-		fetchGridData();
+		Bus.execute(ACTIONS.FETCH_GRID_DATA, gridModel);
 
 		return grid;
+	}
+
+	function createIButton(model, id) {
+		var buttonModel = model[id];
+		return isc.IButton.create({
+			title: buttonModel.title,
+			width: 150,
+			click: function() {
+				Bus.execute(buttonModel.action, buttonModel);
+			}
+		});
 	}
 
 	function render(model) {
@@ -205,22 +230,24 @@
 	}
 
 	$.getJSON("/generated/model.json", function(model) {
-		console.log("model", model);
 		createRules(model);
 		render(model);
 	});
 
 	function createRules(model) {
-		Bus.handle(ACTIONS.FETCH_GRID_DATA, function(requestData, callback) {
-			console.log(ACTIONS.FETCH_GRID_DATA, requestData.gridModel.endpoint);
-
-			$.getJSON(requestData.gridModel.endpoint, function(response) {
+		Bus.handle(ACTIONS.FETCH_GRID_DATA, function(gridModel) {
+			$.getJSON(gridModel.endpoint, function(response) {
 				if (response.ok === true) {
-					callback(response.data);
+					Bus.fire(EVENTS.FETCHED_GRID_DATA, { gridId: gridModel.id, gridData: response.data });
 				} else {
 					throw "Error response: " + JSON.stringify(response);
 				}
 			});
+		});
+
+		Bus.handle(ACTIONS.CLICKED_RELOAD_BUTTON, function(buttonModel) {
+			var gridModel = model[buttonModel.boundToGridId];
+			Bus.execute(ACTIONS.FETCH_GRID_DATA, gridModel);
 		});
 	}
 })();

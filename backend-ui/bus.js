@@ -25,7 +25,6 @@ var Bus = (function() {
             }));
         },
         fire: function(eventId, data) {
-            console.log("fire", eventId, JSON.stringify(data));
             _.each(callbacks, function(item) {
                 if (item.eventId === eventId) {
                     item.callbackFn(data);
@@ -35,10 +34,9 @@ var Bus = (function() {
         handle: function(actionId, handler) {
             handlers[actionId] = handler;
         },
-        execute: function(actionId, data, callback) {
-            console.log("execute", actionId, JSON.stringify(data));
+        execute: function(actionId, data) {
             if (_.isFunction(handlers[actionId])) {
-                handlers[actionId](data, callback);
+                handlers[actionId](data);
             } else {
                 throw "No handler for " + actionId;
             }

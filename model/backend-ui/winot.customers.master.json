@@ -3,6 +3,8 @@
         "type": "VLayout",
         "items": [{
             "id": "grid"
+        }, {
+            "id": "buttons"
         }]
     }
 }

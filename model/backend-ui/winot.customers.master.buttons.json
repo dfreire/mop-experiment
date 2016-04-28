@@ -1,0 +1,12 @@
+{
+    "winot.customers.master.buttons": {
+        "type": "HLayout",
+        "items": [{
+            "id": "reload",
+            "type": "IButton",
+            "title": "Reload",
+            "action": "CLICKED_RELOAD_BUTTON",
+            "boundToGridId": "winot.customers.master.grid"
+        }]
+    }
+}
