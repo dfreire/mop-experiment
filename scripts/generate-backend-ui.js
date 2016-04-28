@@ -2,53 +2,40 @@ var _ = require('lodash');
 var fs = require('fs');
 var path = require('path');
 
-var out = path.join('.', 'backend-ui', 'generated');
+function walk(dir, done) {
+	var results = [];
+	fs.readdir(dir, function(err, list) {
+		if (err) return done(err);
+		var pending = list.length;
+		if (!pending) return done(null, results);
+		list.forEach(function(file) {
+			file = path.resolve(dir, file);
+			fs.stat(file, function(err, stat) {
+				if (stat && stat.isDirectory()) {
+					walk(file, function(err, res) {
+						results = results.concat(res);
+						if (!--pending) done(null, results);
+					});
+				} else {
+					results.push(file);
+					if (!--pending) done(null, results);
+				}
+			});
+		});
+	});
+};
 
-function generateSections() {
-    var sections = require('../model/backend-ui/sections/sections.json');
-    var sectionsJs = "";
+walk(path.join('model', 'backend-ui'), function(err, filePaths) {
+	if (err) {
+		throw err;
+	}
 
-    sectionsJs += "function createSections() {";
-    sectionsJs += "return [";
+	var generated = {};
 
-    _.each(sections, function (section) {
-        sectionsJs += "{";
+	filePaths.forEach(function(filePath) {
+		var file = require(filePath);
+		generated = _.extend(generated, file);
+	});
 
-        sectionsJs += "title: '" + section.title + "',";
-        sectionsJs += "expanded:" + (section.expanded || "false") + ",";
-
-        sectionsJs += "items: [ isc.TreeGrid.create({";
-
-        sectionsJs += "showHeader: false,";
-        sectionsJs += "showRoot: false,";
-        sectionsJs += "fields: [{ name: 'title' }],";
-
-        sectionsJs += "data: isc.Tree.create({";
-        sectionsJs += "modelType: 'parent',";
-        sectionsJs += "idField: 'id',";
-        sectionsJs += "parentIdField: 'parentId',";
-        sectionsJs += "data: [";
-        _.each(section.records, function (record) {
-            sectionsJs += "{";
-            if (record.parentId) {
-                sectionsJs += "parentId: '" + record.parentId +"',";
-            }
-            sectionsJs += "id: '" + record.id +"',";
-            sectionsJs += "title: '" + record.title +"',";
-            sectionsJs += "},";
-        });
-        sectionsJs += "]";
-        sectionsJs += "})"
-
-        sectionsJs += "})]";
-
-        sectionsJs += "},";
-    });
-
-    sectionsJs += "];";
-    sectionsJs += "}";
-
-    fs.writeFileSync(path.join(out, 'sections.js'), sectionsJs);
-}
-
-generateSections();
+	fs.writeFileSync(path.join('backend-ui', 'generated', 'model.json'), JSON.stringify(generated));
+});

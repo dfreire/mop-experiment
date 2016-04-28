@@ -1,0 +1,8 @@
+{
+    "winot.customers.details.overview": {
+        "type": "TabSet",
+        "items": [{
+            "id": "tabset"
+        }]
+    }
+}

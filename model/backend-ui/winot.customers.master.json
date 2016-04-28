@@ -1,0 +1,8 @@
+{
+    "winot.customers.master": {
+        "type": "VLayout",
+        "items": [{
+            "id": "grid"
+        }]
+    }
+}

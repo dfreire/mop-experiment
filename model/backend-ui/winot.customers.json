@@ -1,0 +1,11 @@
+{
+    "winot.customers": {
+        "type": "VLayout",
+        "title": "Customers",
+        "items": [{
+            "id": "master"
+        }, {
+            "id": "details"
+        }]
+    }
+}

@@ -1,4 +1,5 @@
-var _ = require('lodash')
-var model = require('../model/model.json')
+var _ = require('lodash');
 
-console.log(model)
+ fs.readdir('./model/backend-ui', function(err, filenames) {
+     console.log(filenames);
+ });
