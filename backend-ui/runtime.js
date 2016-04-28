@@ -173,17 +173,12 @@
 			fields: gridModel.fields
 		});
 
-		Bus.on(EVENTS.FETCHED_GRID_DATA, function(eventData) {
+		var listenerRef = Bus.on(EVENTS.FETCHED_GRID_DATA, function(eventData) {
 			var gridId = eventData.gridId;
 			if (gridId === gridModel.id) {
 				var gridData = eventData.gridData;
-				console.log("set data", gridData);
-				// datasource.invalidateCache();
 				datasource.setCacheData(gridData);
-				datasource.updateCaches({
-					operationType: "update",
-					data: gridData
-				});
+				datasource.updateCaches({ operationType: "update", data: gridData });
 			}
 		});
 
@@ -202,7 +197,11 @@
 			},
 			showAllRecords: true,
 			autoFetchData: true,
-			dataSource: datasource
+			dataSource: datasource,
+			destroy: function() {
+				Bus.off(listenerRef);
+				return this.Super("destroy", arguments);
+			}
 		});
 
 		Bus.execute(ACTIONS.FETCH_GRID_DATA, gridModel);

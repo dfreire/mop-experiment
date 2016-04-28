@@ -13,9 +13,9 @@ var Bus = (function() {
             callbacks.push(item);
             return item.callbackRef;
         },
-        off: function(eventId, callbackRef) {
+        off: function(callbackRef) {
             callbacks = _.filter(callbacks, function(item) {
-                item.callbackRef !== callbackRef
+                return item.callbackRef !== callbackRef
             });
         },
         once: function(eventId, callback) {
