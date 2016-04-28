@@ -1,0 +1,11 @@
+{
+    "winot.news": {
+        "type": "VLayout",
+        "title": "News",
+        "items": [{
+            "id": "master"
+        }, {
+            "id": "details"
+        }]
+    }
+}

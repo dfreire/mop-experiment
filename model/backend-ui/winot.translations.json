@@ -1,0 +1,11 @@
+{
+    "winot.translations": {
+        "type": "VLayout",
+        "title": "Translations",
+        "items": [{
+            "id": "master"
+        }, {
+            "id": "details"
+        }]
+    }
+}
