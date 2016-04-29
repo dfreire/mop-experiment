@@ -185,7 +185,7 @@
 			}
 		});
 
-		var lastSelection = {};
+		var lastSelectedIds = {};
 
 		var grid = isc.ListGrid.create({
 			ID: modelIdToIscId(id),
@@ -207,24 +207,34 @@
 			dataSource: datasource,
 			selectionChanged: function (record, state) {
 				if (state === true) {
-					lastSelection[record.id] = record;
+					lastSelectedIds[record.id] = true;
 				} else {
-					delete lastSelection[record.id];
+					delete lastSelectedIds[record.id];
 				}
 			},
 			selectionUpdated: function (record, recordList) {
 				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
 			},
-			filterData: function() {
-				this.Super("filterData", arguments);
-				getNative(id).selectRecords(_.values(lastSelection));
-				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
+			// filterData: function() {
+			// 	this.Super("filterData", arguments);
+			// 	reselect();
+			// },
+			dataArrived: function(startRow, endRow) {
+				setTimeout(reselect, 0);
 			},
 			destroy: function() {
 				this.Super("destroy", arguments);
 				Bus.off(listenerRef);
 			}
 		});
+
+		function reselect() {
+			var records = _.filter(getAllGridRecords(id), function(record) {
+				return lastSelectedIds[record.id];
+			})
+			getNative(id).selectRecords(records);
+			Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
+		}
 
 		Bus.execute(ACTIONS.FETCH_GRID_DATA, gridModel);
 
@@ -268,6 +278,10 @@
 
 	function getGridVisibleSelectedRecords(gridId) {
 		return getNative(gridId).getSelectedRecords();
+	}
+
+	function getAllGridRecords(gridId) {
+		return getNative(gridId).getData().getAllCachedRows();
 	}
 
 	function render(model) {
