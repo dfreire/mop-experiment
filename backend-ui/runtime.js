@@ -139,6 +139,7 @@
 	}
 
 	function createComponent(model, id) {
+		model[id].id = id;
 		switch (model[id].type) {
 			case "HLayout":
 				return createLayout("HLayout", model, id);
@@ -170,6 +171,8 @@
 	function createListGrid(model, id) {
 		var gridModel = model[id];
 
+		var lastSelectedIds = {}; // <record.id>: true
+
 		var datasource = isc.DataSource.create({
 			clientOnly: true,
 			fields: gridModel.fields
@@ -179,13 +182,20 @@
 			var gridId = eventData.gridId;
 			if (gridId === gridModel.id) {
 				var gridData = eventData.gridData;
+
+				var newSelectedIds = {};
+				gridData.forEach(function(record) {
+					if (lastSelectedIds[record.id] === true) {
+						newSelectedIds[record.id] = true
+					}
+				});
+				lastSelectedIds = newSelectedIds;
+
 				datasource.setCacheData(gridData);
-				datasource.updateCaches({ operationType: "update", data: gridData });
+				// datasource.updateCaches({ operationType: "update", data: gridData });
 				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
 			}
 		});
-
-		var lastSelectedIds = {};
 
 		var grid = isc.ListGrid.create({
 			ID: modelIdToIscId(id),
@@ -293,12 +303,13 @@
 	}
 
 	$.getJSON("/generated/model.json", function(model) {
-		createRules(model);
+		createHandlers(model);
 		render(model);
 	});
 
-	function createRules(model) {
+	function createHandlers(model) {
 		Bus.handle(ACTIONS.FETCH_GRID_DATA, function(gridModel) {
+			getNative(gridModel.id).invalidateCache();
 			$.getJSON(gridModel.endpoint, function(response) {
 				if (response.ok === true) {
 					Bus.fire(EVENTS.FETCHED_GRID_DATA, { gridId: gridModel.id, gridData: response.data });

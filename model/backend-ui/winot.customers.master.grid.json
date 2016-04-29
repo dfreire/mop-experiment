@@ -6,6 +6,9 @@
             "primaryKey": true,
             "hidden": true
         }, {
+            "name": "name",
+            "title": "Name"
+        }, {
             "name": "email",
             "title": "Email"
         }, {
