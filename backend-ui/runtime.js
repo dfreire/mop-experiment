@@ -185,6 +185,8 @@
 			}
 		});
 
+		var lastSelection = {};
+
 		var grid = isc.ListGrid.create({
 			ID: modelIdToIscId(id),
 			width: "100%",
@@ -203,11 +205,19 @@
 			// selectionProperty: '_selected',
 			autoFetchData: true,
 			dataSource: datasource,
+			selectionChanged: function (record, state) {
+				if (state === true) {
+					lastSelection[record.id] = record;
+				} else {
+					delete lastSelection[record.id];
+				}
+			},
 			selectionUpdated: function (record, recordList) {
 				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
 			},
 			filterData: function() {
 				this.Super("filterData", arguments);
+				getNative(id).selectRecords(_.values(lastSelection));
 				Bus.fire(EVENTS.SELECTED_GRID_RECORDS, id);
 			},
 			destroy: function() {
